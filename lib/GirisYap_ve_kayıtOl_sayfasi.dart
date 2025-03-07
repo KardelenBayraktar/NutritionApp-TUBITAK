@@ -8,6 +8,8 @@ void main() {
 
 // 📌 Ana Sayfa (Giriş & Kayıt Butonları)
 class AuthHomePage extends StatelessWidget {
+  const AuthHomePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,6 +40,8 @@ class AuthHomePage extends StatelessWidget {
 
 // 📌 Giriş Yap Sayfası
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }
@@ -97,6 +101,8 @@ class _LoginPageState extends State<LoginPage> {
 
 // 📌 Kayıt Ol Sayfası
 class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
+
   @override
   _RegisterPageState createState() => _RegisterPageState();
 }

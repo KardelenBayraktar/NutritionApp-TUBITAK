@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'Bir_tarif_sayfasi.dart';
 
 class RecipeListPage extends StatefulWidget {
+  const RecipeListPage({super.key});
+
   @override
   _RecipeListPageState createState() => _RecipeListPageState();
 }
