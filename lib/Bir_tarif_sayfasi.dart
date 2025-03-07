@@ -6,7 +6,7 @@ import 'Favoriler_sayfasi.dart';
 
 class RecipeDetailPage extends StatefulWidget {
   final String recipeId;
-  RecipeDetailPage({required this.recipeId});
+  const RecipeDetailPage({super.key, required this.recipeId});
 
   @override
   _RecipeDetailPageState createState() => _RecipeDetailPageState();
@@ -165,7 +165,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   }
 
   Widget _buildCard({required String title, required Widget content}) {
-    return Container(
+    return SizedBox(
       width: MediaQuery.of(context).size.width - 32,
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

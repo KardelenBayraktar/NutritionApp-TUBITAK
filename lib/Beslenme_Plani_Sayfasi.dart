@@ -3,6 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MealPlanPage extends StatefulWidget {
+  const MealPlanPage({super.key});
+
   @override
   _MealPlanPageState createState() => _MealPlanPageState();
 }

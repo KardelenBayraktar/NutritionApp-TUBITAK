@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
 class MealPlanHomePage extends StatelessWidget {
+  const MealPlanHomePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -35,6 +37,8 @@ class MealPlanHomePage extends StatelessWidget {
 
 // Yeni sayfa
 class MealPlanCreationPage extends StatefulWidget {
+  const MealPlanCreationPage({super.key});
+
   @override
   _MealPlanCreationPageState createState() => _MealPlanCreationPageState();
 }

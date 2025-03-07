@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class RozetlerSayfasi extends StatefulWidget {
+  const RozetlerSayfasi({super.key});
+
   @override
   _RozetlerSayfasiState createState() => _RozetlerSayfasiState();
 }

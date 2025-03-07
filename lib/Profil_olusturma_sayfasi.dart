@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class ChildProfilePage extends StatefulWidget {
+  const ChildProfilePage({super.key});
+
   @override
   _ChildProfilePageState createState() => _ChildProfilePageState();
 }
@@ -8,10 +10,10 @@ class ChildProfilePage extends StatefulWidget {
 class _ChildProfilePageState extends State<ChildProfilePage> {
   final _formKey = GlobalKey<FormState>();
 
-  TextEditingController _nameController = TextEditingController();
-  TextEditingController _surnameController = TextEditingController();
-  TextEditingController _heightController = TextEditingController();
-  TextEditingController _weightController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _surnameController = TextEditingController();
+  final TextEditingController _heightController = TextEditingController();
+  final TextEditingController _weightController = TextEditingController();
 
   String? _selectedGender;
   String? _selectedBloodType;

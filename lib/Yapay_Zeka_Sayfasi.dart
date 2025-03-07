@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class AIPage extends StatefulWidget {
+  const AIPage({super.key});
+
   @override
   _AIPageState createState() => _AIPageState();
 }
@@ -9,7 +11,7 @@ class _AIPageState extends State<AIPage> {
   List<Map<String, String>> messages = [
     {"sender": "bot", "text": "Merhabalar, ben Asistan. Sizlere nasıl yardımcı olabilirim?"}
   ];
-  TextEditingController _controller = TextEditingController();
+  final TextEditingController _controller = TextEditingController();
 
   void _sendMessage() {
     if (_controller.text.trim().isNotEmpty) {
@@ -52,6 +54,8 @@ class _AIPageState extends State<AIPage> {
       ),
     );
   }
+
+
 
   Widget _buildMessageInput() {
     return Container(
