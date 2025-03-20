@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "171178847238",
+    "project_id": "first-firebase-a67c2",
+    "storage_bucket": "first-firebase-a67c2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:171178847238:android:c1d7d894f81027803b2787",
+        "android_client_info": {
+          "package_name": "com.example.beslenme_takip_sistemi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD7rYBRL2w8Jizk4fm3H9_TcsvbpTSTaQs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
