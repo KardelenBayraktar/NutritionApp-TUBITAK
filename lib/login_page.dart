@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Firestore ekleniyor
 import 'register_page.dart';
 
 class LoginPage extends StatelessWidget {
@@ -27,9 +28,9 @@ class LoginPage extends StatelessWidget {
                 SizedBox(height: 20),
                 _buildButton(context, "Giriş Yap", () {
                   if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
-                    _showErrorDialog(context, "Eksik bilgi girdiniz.");
+                    _showErrorDialog(context, "Kullanıcı adı ve şifre gereklidir.");
                   } else {
-                    // Giriş işlemleri yapılabilir
+                    _signInUser(context);
                   }
                 }),
                 SizedBox(height: 15),
@@ -87,6 +88,38 @@ class LoginPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _signInUser(BuildContext context) async {
+    try {
+      String username = _usernameController.text;
+      String password = _passwordController.text;
+
+      // Firestore'da kullanıcı adı var mı kontrol et
+      QuerySnapshot query = await FirebaseFirestore.instance
+          .collection('users')
+          .where('username', isEqualTo: username)
+          .get();
+
+      if (query.docs.isEmpty) {
+        _showErrorDialog(context, "Böyle bir kullanıcı adı kayıtlı değil.");
+        return;
+      }
+
+      // Kullanıcının şifresini al
+      String firestorePassword = query.docs.first.get('password');
+
+      // Şifre doğrulaması
+      if (password != firestorePassword) {
+        _showErrorDialog(context, "Yanlış şifre girdiniz.");
+        return;
+      }
+
+      // Şifre doğru, kullanıcı başarılı giriş yaptı
+      Navigator.pushReplacementNamed(context, '/home');
+    } catch (e) {
+      _showErrorDialog(context, "Bir hata oluştu: ${e.toString()}");
+    }
   }
 
   void _showErrorDialog(BuildContext context, String message) {

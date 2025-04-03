@@ -11,6 +11,7 @@ import 'Oduller_Sayfasi.dart';
 import 'Plan_Olusturma_Sayfasi.dart';
 import 'Tarifler_sayfasi.dart';
 import 'Yapay_Zeka_Sayfasi.dart';
+import 'login_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Flutter'ın başlatıldığından emin olun
@@ -31,8 +32,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: '/home',
+      initialRoute: '/login',
       routes: {
+        '/login': (context) => LoginPage(),
         '/home': (context) => HomePage(),
         '/plan': (context) => hasActivePlan ? MealPlanPage() : MealPlanHomePage(), // 📌 Aktif plana göre yönlendirme
         //'/progress': (context) => ProgressPage(),
