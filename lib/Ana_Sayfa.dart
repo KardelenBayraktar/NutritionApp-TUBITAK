@@ -36,7 +36,7 @@ class _HomePageState extends State<HomePage> {
             ),
             _buildDrawerItem(Icons.home, "Ana Sayfa", "/home"),
             _buildDrawerItem(Icons.event_note, "Planım", "/plan"),
-            _buildDrawerItem(Icons.track_changes, "Gelişim Takibi", "/progress"),
+            _buildDrawerItem(Icons.track_changes, "Gelişim Takibi", "/gelisim"),
             _buildDrawerItem(Icons.book, "Tarifler", "/recipes"),
             _buildDrawerItem(Icons.favorite, "Favorilerim", "/favorites"), // Yeni sekme eklendi
             _buildDrawerItem(Icons.support_agent, "Asistan", "/assistant"),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/date_symbol_data_local.dart'; // Yerel tarih formatlama için
@@ -12,6 +11,7 @@ import 'Plan_Olusturma_Sayfasi.dart';
 import 'Tarifler_sayfasi.dart';
 import 'Yapay_Zeka_Sayfasi.dart';
 import 'login_page.dart';
+import 'gelisim_takibi.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Flutter'ın başlatıldığından emin olun
@@ -26,7 +26,8 @@ void main() async {
 class MyApp extends StatelessWidget {
   final bool hasActivePlan;
 
-  MyApp({required this.hasActivePlan});
+  // Varsayılan değeri false olarak belirliyoruz
+  MyApp({this.hasActivePlan = false});
 
   @override
   Widget build(BuildContext context) {
@@ -37,12 +38,11 @@ class MyApp extends StatelessWidget {
         '/login': (context) => LoginPage(),
         '/home': (context) => HomePage(),
         '/plan': (context) => hasActivePlan ? MealPlanPage() : MealPlanHomePage(), // 📌 Aktif plana göre yönlendirme
-        //'/progress': (context) => ProgressPage(),
         '/recipes': (context) => RecipeListPage(),
+        '/gelisim': (context) => GelisimTakibiSayfasi(),
         '/favorites': (context) => FavoritesPage(),
         '/assistant': (context) => AIPage(),
         '/badges': (context) => RozetlerSayfasi(),
-        //'/settings': (context) => SettingsPage(),
       },
     );
   }
