@@ -5,8 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'Favoriler_sayfasi.dart';
 
 class RecipeDetailPage extends StatefulWidget {
-  final String recipeId;
-  const RecipeDetailPage({super.key, required this.recipeId});
+  final String tarifAdi;
+  RecipeDetailPage({required this.tarifAdi});
 
   @override
   _RecipeDetailPageState createState() => _RecipeDetailPageState();
@@ -20,12 +20,14 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   void initState() {
     super.initState();
     _fetchRecipeDetails();
+    _checkIfFavorite(); // Sayfa açıldığında favori olup olmadığını kontrol et
   }
 
+  // Firestore'dan tarifin detaylarını çek
   void _fetchRecipeDetails() async {
     DocumentSnapshot recipeSnapshot = await FirebaseFirestore.instance
-        .collection('recipes')
-        .doc(widget.recipeId)
+        .collection('tarifler')
+        .doc(widget.tarifAdi)
         .get();
 
     if (recipeSnapshot.exists) {
@@ -35,52 +37,52 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
     }
   }
 
+  // Firestore'dan tarifin favorilere eklenip eklenmediğini kontrol et
+  void _checkIfFavorite() async {
+    DocumentSnapshot favoriteSnapshot = await FirebaseFirestore.instance
+        .collection('favorites')
+        .doc(widget.tarifAdi)
+        .get();
+
+    if (favoriteSnapshot.exists) {
+      setState(() {
+        isFavorite = true;
+      });
+    }
+  }
+
+  // Tarif favorilere ekleme/çıkarma işlemi
   void toggleFavorite() async {
     setState(() {
       isFavorite = !isFavorite;
     });
 
     if (isFavorite) {
-      await FirebaseFirestore.instance.collection('favorites').add({
+      // Tarif favorilere ekleniyor
+      await FirebaseFirestore.instance.collection('favorites').doc(widget.tarifAdi).set({
         'name': recipeData?['name'],
-        'imageUrl': recipeData?['imageUrl'],
+        'image': recipeData?['image'],
+        'ingredients': recipeData?['ingredients'],
+        'meal_type': recipeData?['meal_type'],
+        'steps': recipeData?['steps'],
+        'serving': recipeData?['serving'],
+        'besinDeğerleri': recipeData?['besinDeğerleri'],
         'summary': recipeData?['summary'],
       });
-      showFavoriteSnackbar();
+      showSnackbar(true); // Favorilere eklendi mesajı göster
     } else {
-      final querySnapshot = await FirebaseFirestore.instance
-          .collection('favorites')
-          .where('name', isEqualTo: recipeData?['name'])
-          .get();
-
-      if (querySnapshot.docs.isNotEmpty) {
-        await querySnapshot.docs.first.reference.delete();
-        showSnackbar();
-      }
+      // Tarif favorilerden kaldırılıyor
+      await FirebaseFirestore.instance.collection('favorites').doc(widget.tarifAdi).delete();
+      showSnackbar(false);
     }
   }
 
-  void showFavoriteSnackbar() {
+  void showSnackbar(bool isAdded) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Tarif favorilere eklendi'),
-        action: SnackBarAction(
-          label: 'Favorilere Git',
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => FavoritesPage()),
-            );
-          },
+        content: Text(
+          isAdded ? 'Tarif favorilere eklendi' : 'Tarif favorilerden kaldırıldı',
         ),
-      ),
-    );
-  }
-
-  void showSnackbar() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Tarif favorilerden kaldırıldı'),
         action: SnackBarAction(
           label: 'Favorilere Git',
           onPressed: () {
@@ -120,7 +122,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10),
                         image: DecorationImage(
-                          image: NetworkImage(recipeData!['imageUrl']),
+                          image: NetworkImage(recipeData!['image']),
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -153,7 +155,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                 SizedBox(height: 16),
                 _buildCard(title: 'Servis & Porsiyon Bilgisi', content: Text(recipeData!['serving'])),
                 SizedBox(height: 16),
-                _buildCard(title: 'Besin Değerleri', content: _buildNutrition(recipeData!['nutrition'])),
+                _buildCard(title: 'Besin Değerleri', content: _buildNutrition(recipeData!['besinDeğerleri'])),
                 SizedBox(height: 16),
                 _buildCard(title: 'Ekstra Bilgiler', content: Text(recipeData!['summary'])),
               ],
@@ -165,7 +167,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   }
 
   Widget _buildCard({required String title, required Widget content}) {
-    return SizedBox(
+    return Container(
       width: MediaQuery.of(context).size.width - 32,
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -199,10 +201,10 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Kalori: ${nutrition['calories']}'),
-        Text('Protein: ${nutrition['protein']}'),
-        Text('Karbonhidrat: ${nutrition['carbs']}'),
-        Text('Yağ: ${nutrition['fat']}'),
+        Text('Kalori: ${nutrition['Kalori']}'),
+        Text('Karbonhidrat: ${nutrition['Karbonhidrat']}'),
+        Text('Protein: ${nutrition['Protein']}'),
+        Text('Yağ: ${nutrition['Yağ']}'),
       ],
     );
   }

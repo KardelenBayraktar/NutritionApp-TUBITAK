@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
-
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
   String userName = "Kullanıcı Adı"; // Kullanıcının adı (Firestore'dan çekilecek)
-  String profileImageUrl = "https://via.placeholder.com/150"; // Profil resmi URL (Firestore'dan çekilecek)
+  String profileImageUrl = "assets/emoji.jpg"; // Profil resmi URL (Firestore'dan çekilecek)
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +24,7 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   CircleAvatar(
                     radius: 30,
-                    backgroundImage: NetworkImage(profileImageUrl), // Profil fotoğrafı
+                    backgroundImage: AssetImage(profileImageUrl), // Yerel resim için AssetImage kullanılır
                   ),
                   SizedBox(height: 8),
                   Text(
@@ -69,7 +67,7 @@ class _HomePageState extends State<HomePage> {
               },
               child: CircleAvatar(
                 radius: 22,
-                backgroundImage: NetworkImage(profileImageUrl),
+                backgroundImage: AssetImage(profileImageUrl), // Yerel resim için AssetImage kullanılır
               ),
             ),
             SizedBox(width: 12),

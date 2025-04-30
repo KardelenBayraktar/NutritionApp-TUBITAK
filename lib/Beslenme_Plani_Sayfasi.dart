@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
+
+import 'Bir_tarif_sayfasi.dart';
+import 'Manuel_Plan_Olusturma_Sayfasi.dart';
+import 'Plan_Olusturma_Sayfasi.dart';
+
 
 class MealPlanPage extends StatefulWidget {
-  const MealPlanPage({super.key});
-
   @override
   _MealPlanPageState createState() => _MealPlanPageState();
 }
@@ -21,7 +25,6 @@ class _MealPlanPageState extends State<MealPlanPage> {
     'Karbonhidrat': 0,
     'Protein': 0,
     'Yağ': 0,
-    'Mineraller': 0,
   };
 
   @override
@@ -72,7 +75,16 @@ class _MealPlanPageState extends State<MealPlanPage> {
       QuerySnapshot snapshot = await dayRef.get(); // Belirtilen günün yemek planını getir
 
       if (snapshot.docs.isNotEmpty) {
+        // Besin değerlerini sıfırla
+        Map<String, double> tempNutritionTotals = {
+          "Kalori": 0,
+          "Karbonhidrat": 0,
+          "Protein": 0,
+          "Yağ": 0,
+        };
+
         for (var doc in snapshot.docs) {
+          print("Öğün: ${doc.id}, Veriler: ${doc.data()}");
           String mealType = doc.id; // Kahvaltı, Öğle, Akşam gibi öğün isimleri
 
           // Alt koleksiyon olan "tarifler"i çek
@@ -80,15 +92,31 @@ class _MealPlanPageState extends State<MealPlanPage> {
           QuerySnapshot tariflerSnapshot = await tariflerRef.get();
 
           List<String> meals = [];
+
           for (var tarifDoc in tariflerSnapshot.docs) {
             meals.add(tarifDoc.id); // Tarif ismi olarak belge ID'lerini al
+
+            // Tarif belgesinin "besinDeğerleri" alanını al
+            Map<String, dynamic>? besinDegerleri = tarifDoc.get("besinDeğerleri");
+
+            if (besinDegerleri != null) {
+              tempNutritionTotals["Kalori"] = (tempNutritionTotals["Kalori"] ?? 0) + (besinDegerleri["Kalori"] ?? 0);
+              tempNutritionTotals["Karbonhidrat"] = (tempNutritionTotals["Karbonhidrat"] ?? 0) + (besinDegerleri["Karbonhidrat"] ?? 0);
+              tempNutritionTotals["Protein"] = (tempNutritionTotals["Protein"] ?? 0) + (besinDegerleri["Protein"] ?? 0);
+              tempNutritionTotals["Yağ"] = (tempNutritionTotals["Yağ"] ?? 0) + (besinDegerleri["Yağ"] ?? 0);
+            }
           }
 
+          // Ekranda yemekleri güncelle
           setState(() {
             mealPlan[mealType] = meals;
-            nutritionTotals.updateAll((key, value) => 0);
           });
         }
+        // Besin değerleri güncellemesini döngüden sonra yap
+        setState(() {
+          nutritionTotals = tempNutritionTotals;
+        });
+
       } else {
         print("Bu gün için beslenme planı bulunamadı.");
         setState(() {
@@ -101,16 +129,162 @@ class _MealPlanPageState extends State<MealPlanPage> {
     }
   }
 
+  void _showPlanOptionsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Beslenme Planı Oluşturma Seçenekleri"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context); // Dialogu kapat
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => MealPlanCreationPage()),
+                  );
+                },
+                child: Text("Yapay Zeka ile Oluştur"),
+              ),
+              SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context); // Dialogu kapat
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ManualPlanPage()),
+                  );
+                },
+                child: Text("Kendiniz Oluşturun"),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> loadPreviousPlan() async {
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+    try {
+      // En güncel ve bir önceki planı almak için sorgu
+      QuerySnapshot querySnapshot = await firestore
+          .collection("beslenme_planları")
+          .orderBy("timestamp", descending: true) // Yeniden eskiye sıralama
+          .limit(2) // Son iki planı al
+          .get();
+
+      if (querySnapshot.docs.length > 1) {
+        // 1. En güncel plan (aktif olan)
+        DocumentSnapshot latestPlan = querySnapshot.docs[0];
+
+        // 2. Bir önceki plan (geri yüklemek istediğimiz)
+        DocumentSnapshot previousPlan = querySnapshot.docs[1];
+
+        // En güncel planın aktiflik durumunu false yap
+        await firestore.collection("beslenme_planları").doc(latestPlan.id).update({
+          "aktif": false,
+        });
+
+        // Önceki planı aktif hale getir
+        await firestore.collection("beslenme_planları").doc(previousPlan.id).update({
+          "aktif": true,
+        });
+
+        // Planı ekrana yükle
+        Map<String, dynamic> planData = previousPlan.data() as Map<String, dynamic>;
+
+        setState(() {
+          planId = previousPlan.id;
+          selectedDate = DateTime.now(); // Geri yüklenen planın tarihi
+          mealPlan.clear();
+          nutritionTotals.updateAll((key, value) => 0);
+        });
+
+        // Günlük planı çek
+        await _fetchMealPlan(selectedDate);
+
+        print("Önceki plan başarıyla yüklendi!");
+      } else {
+        print("Önceki bir plan bulunamadı.");
+      }
+    } catch (e) {
+      print("Önceki plan yüklenirken hata oluştu: $e");
+    }
+  }
+
+  // Başarı mesajını içeren popup
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Başarılı"),
+          content: Text("Beslenme planı başarıyla silindi."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Önce dialog kapatılır
+                Navigator.pushReplacementNamed(context, "/plan"); // Yeni sayfaya yönlendirme
+              },
+              child: Text("Tamam"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Beslenme Planı')),
-      body: Column(
-        children: [
-          _buildCalendar(), // Takvim widget'ını oluştur
-          Expanded(child: _buildMealPlan()), // Öğün listesini gösteren widget
-          _buildNutritionCard(), // Besin değerlerini gösteren widget
-        ],
+    return WillPopScope(
+      onWillPop: () async {
+        // Geri tuşuna basıldığında Ana Sayfa'ya yönlendir
+        Navigator.pushReplacementNamed(context, "/home");
+        return false; // Sayfayı kapatma, yönlendirme yap
+      },
+      child: Scaffold(
+        appBar: AppBar(title: Text('Beslenme Planı')),
+        body: SingleChildScrollView( // Tüm sayfa kaydırılabilir olacak
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildCalendar(), // Takvim widget'ını oluştur
+              _buildMealPlan(), // Öğün listesi
+              _buildNutritionCard(), // Besin değerlerini gösteren widget
+              Center(  // Butonu yatayda ortalamak için Center widget'ı ekliyoruz
+                child: ElevatedButton(
+                  onPressed: () {
+                    _showPlanOptionsDialog(context);
+                  },
+                  child: Text("Yeni bir beslenme planı oluştur"),
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 32.0),
+                    textStyle: TextStyle(fontSize: 16),
+                  ),
+                ),
+              ),
+              SizedBox(height: 20),  // Butonun altında boşluk
+              Center(
+                child: ElevatedButton(
+                  onPressed: () {
+                    loadPreviousPlan;
+                  },
+                  child: Text("Önceki Planı Yükle"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 32.0),
+                    textStyle: TextStyle(fontSize: 16),
+                  ),
+                ),
+              ),
+              SizedBox(height: 20), // Butonun altında boşluk
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -188,10 +362,21 @@ class _MealPlanPageState extends State<MealPlanPage> {
   // Günlük öğünleri listeleyen widget
   Widget _buildMealPlan() {
     if (mealPlan.isEmpty) {
-      return Center(child: Text('Bu gün için bir plan bulunmamaktadır.'));
+      return SizedBox(
+        height: 200, // Boşken belli bir yükseklik kaplaması için
+        child: Center(
+          child: Text(
+            'Bu gün için bir plan bulunmamaktadır.',
+            style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic, color: Colors.grey),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
     }
 
     return ListView(
+      shrinkWrap: true, // ListView'in içeriğe göre boyut almasını sağlar
+      physics: NeverScrollableScrollPhysics(), // SingleChildScrollView içinde kaydırmayı devre dışı bırakır
       padding: EdgeInsets.all(8.0),
       children: mealPlan.entries.map((entry) {
         return Card(
@@ -225,7 +410,12 @@ class _MealPlanPageState extends State<MealPlanPage> {
                       children: [
                         GestureDetector(
                           onTap: () {
-                            print("$meal tıklandı");
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => RecipeDetailPage(tarifAdi: meal),
+                              ),
+                            );
                           },
                           child: Text(
                             meal,

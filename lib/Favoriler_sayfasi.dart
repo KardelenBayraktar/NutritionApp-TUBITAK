@@ -5,8 +5,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'Bir_tarif_sayfasi.dart';
 
 class FavoritesPage extends StatelessWidget {
-  const FavoritesPage({super.key});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -14,7 +12,7 @@ class FavoritesPage extends StatelessWidget {
         title: Text('Favori Tarifler'),
       ),
       body: StreamBuilder(
-        stream: FirebaseFirestore.instance.collection('favoriler').snapshots(),
+        stream: FirebaseFirestore.instance.collection('favorites').snapshots(),
         builder: (context, AsyncSnapshot<QuerySnapshot> favoriteSnapshot) {
           if (favoriteSnapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
@@ -27,7 +25,7 @@ class FavoritesPage extends StatelessWidget {
 
           return FutureBuilder(
             future: FirebaseFirestore.instance
-                .collection('recipes')
+                .collection('tarifler')
                 .where(FieldPath.documentId, whereIn: favoriteRecipeIds)
                 .get(),
             builder: (context, AsyncSnapshot<QuerySnapshot> recipeSnapshot) {
@@ -41,9 +39,9 @@ class FavoritesPage extends StatelessWidget {
               final favoriteRecipes = recipeSnapshot.data!.docs.map((doc) {
                 return {
                   'id': doc.id,
-                  'name': doc['name'] ?? '',
-                  'meal_type': doc['meal_type'] ?? 'Bilinmeyen',
-                  'imageUrl': doc['imageUrl'] ?? 'https://www.example.com/yemek.jpg',
+                  'name': doc['name'] ?? 'Bilinmeyen Tarif',
+                  'meal_type': doc['meal_type'] ?? 'Bilinmeyen Öğün',
+                  'image': doc['image'] ?? 'https://www.example.com/placeholder.jpg',
                 };
               }).toList();
 
@@ -58,7 +56,7 @@ class FavoritesPage extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => RecipeDetailPage(recipeId: recipe['id']),
+                            builder: (context) => RecipeDetailPage(tarifAdi: recipe['id']),
                           ),
                         );
                       },
@@ -73,10 +71,11 @@ class FavoritesPage extends StatelessWidget {
                             ClipRRect(
                               borderRadius: BorderRadius.horizontal(left: Radius.circular(12)),
                               child: Image.network(
-                                recipe['imageUrl'],
+                                recipe['image'],
                                 width: 100,
                                 height: 100,
                                 fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) => Icon(Icons.image_not_supported, size: 100, color: Colors.grey),
                               ),
                             ),
                             SizedBox(width: 10),
@@ -96,7 +95,7 @@ class FavoritesPage extends StatelessWidget {
                                     ),
                                     SizedBox(height: 5),
                                     Text(
-                                      recipe['meal_type'], // Öğün türü gösteriliyor
+                                      recipe['meal_type'],
                                       style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                                     ),
                                   ],
