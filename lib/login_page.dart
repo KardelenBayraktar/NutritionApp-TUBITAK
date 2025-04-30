@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart'; // Firestore ekleniyor
+
+import 'Cocuk_Profili_Sayfasi.dart';
 import 'register_page.dart';
 
 class LoginPage extends StatelessWidget {
@@ -116,7 +119,10 @@ class LoginPage extends StatelessWidget {
       }
 
       // Şifre doğru, kullanıcı başarılı giriş yaptı
-      Navigator.pushReplacementNamed(context, '/home');
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => CocukProfilSayfasi()),
+      );
     } catch (e) {
       _showErrorDialog(context, "Bir hata oluştu: ${e.toString()}");
     }

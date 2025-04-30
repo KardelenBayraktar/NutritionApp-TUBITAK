@@ -1,3 +1,4 @@
+import 'package:beslenme_takip_sistemi/Ana_Sayfa.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -48,7 +49,7 @@ class _CocukProfilOlusturmaSayfasiState extends State<CocukProfilOlusturmaSayfas
 
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => YeniSayfa()),
+        MaterialPageRoute(builder: (context) => HomePage()),
             (Route<dynamic> route) => false,
       );
     }
