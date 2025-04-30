@@ -1,6 +1,7 @@
 import 'package:beslenme_takip_sistemi/Ana_Sayfa.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'firestore_service.dart';
 
 class CocukProfilOlusturmaSayfasi extends StatefulWidget {
   @override
@@ -8,7 +9,8 @@ class CocukProfilOlusturmaSayfasi extends StatefulWidget {
       _CocukProfilOlusturmaSayfasiState();
 }
 
-class _CocukProfilOlusturmaSayfasiState extends State<CocukProfilOlusturmaSayfasi> {
+class _CocukProfilOlusturmaSayfasiState
+    extends State<CocukProfilOlusturmaSayfasi> {
   int _aktifAdim = 0;
 
   String _isim = '';
@@ -27,7 +29,8 @@ class _CocukProfilOlusturmaSayfasiState extends State<CocukProfilOlusturmaSayfas
   final TextEditingController _boyController = TextEditingController();
   final TextEditingController _kiloController = TextEditingController();
   final TextEditingController _digerAlerjiController = TextEditingController();
-  final TextEditingController _digerHastalikController = TextEditingController();
+  final TextEditingController _digerHastalikController =
+      TextEditingController();
 
   void _ileriGit() {
     if (_aktifAdim < 7) {
@@ -35,23 +38,40 @@ class _CocukProfilOlusturmaSayfasiState extends State<CocukProfilOlusturmaSayfas
         _aktifAdim++;
       });
     } else {
-      // Tüm veriler girildikten sonra burada işlemler yapılabilir
-      print("İsim: $_isim");
-      print("Cinsiyet: $_cinsiyet");
-      print("Doğum Tarihi: $_dogumTarihi");
-      print("Boy: $_boy");
-      print("Kilo: $_kilo");
-      print("Fiziksel Aktivite Düzeyi: $_aktiviteDuzeyi");
-      print("Alerji Var mı?: $_alerjiVarMi");
-      print("Seçili Alerjiler: $_seciliAlerjiler");
-      print("Hastalık Var mı?: $_hastalikVarMi");
-      print("Seçili Hastalıklar: $_seciliHastaliklar");
+      _asamaVerisiniKaydet(); // en son veriyi de kaydet
+      _veriKaydet(); // 🔹 Firebase'e kaydet
+    }
+  }
 
+
+  void _veriKaydet() async {
+    if (_dogumTarihi == null ||
+        _isim.isEmpty ||
+        _cinsiyet.isEmpty ||
+        _aktiviteDuzeyi.isEmpty) {
+      // Verilerin eksik olduğunu kontrol edin.
+      return;
+    }
+
+    try {
+      await FirestoreService().createProfile(
+        isim: _isim,
+        cinsiyet: _cinsiyet,
+        dogumTarihi: _dogumTarihi!,
+        boy: _boy,
+        kilo: _kilo,
+        aktiviteDuzeyi: _aktiviteDuzeyi,
+        alerjiler: _seciliAlerjiler,
+        hastaliklar: _seciliHastaliklar,
+      );
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => HomePage()),
-            (Route<dynamic> route) => false,
+        (Route<dynamic> route) => false,
       );
+    } catch (e) {
+      // Hata mesajı gösterilebilir.
+      print("Hata: $e");
     }
   }
 
@@ -69,10 +89,7 @@ class _CocukProfilOlusturmaSayfasiState extends State<CocukProfilOlusturmaSayfas
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              "Çocuğunuzun ismini girin",
-              style: TextStyle(fontSize: 22),
-            ),
+            Text("Çocuğunuzun ismini girin", style: TextStyle(fontSize: 22)),
             SizedBox(height: 20),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -93,10 +110,7 @@ class _CocukProfilOlusturmaSayfasiState extends State<CocukProfilOlusturmaSayfas
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              "Cinsiyet Seçin",
-              style: TextStyle(fontSize: 22),
-            ),
+            Text("Cinsiyet Seçin", style: TextStyle(fontSize: 22)),
             SizedBox(height: 20),
             ToggleButtons(
               isSelected: [_cinsiyet == 'Erkek', _cinsiyet == 'Kız'],
@@ -126,10 +140,7 @@ class _CocukProfilOlusturmaSayfasiState extends State<CocukProfilOlusturmaSayfas
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              "Doğum Tarihini Seçin",
-              style: TextStyle(fontSize: 22),
-            ),
+            Text("Doğum Tarihini Seçin", style: TextStyle(fontSize: 22)),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () async {
@@ -159,10 +170,7 @@ class _CocukProfilOlusturmaSayfasiState extends State<CocukProfilOlusturmaSayfas
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              "Boy ve Kilo Bilgisi",
-              style: TextStyle(fontSize: 22),
-            ),
+            Text("Boy ve Kilo Bilgisi", style: TextStyle(fontSize: 22)),
             SizedBox(height: 20),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -224,7 +232,10 @@ class _CocukProfilOlusturmaSayfasiState extends State<CocukProfilOlusturmaSayfas
                         });
                       },
                     ),
-                    title: Text(secenekler[index], style: TextStyle(fontSize: 18)),
+                    title: Text(
+                      secenekler[index],
+                      style: TextStyle(fontSize: 18),
+                    ),
                     trailing: IconButton(
                       icon: Icon(Icons.help_outline),
                       onPressed: () {
@@ -297,34 +308,35 @@ class _CocukProfilOlusturmaSayfasiState extends State<CocukProfilOlusturmaSayfas
               Wrap(
                 spacing: 10,
                 runSpacing: 10,
-                children: [
-                  "Süt/Laktoz",
-                  "Gluten",
-                  "Yumurta",
-                  "Yer fıstığı",
-                  "Ağaç yemişleri (badem, ceviz vb.)",
-                  "Balık",
-                  "Kabuklu deniz ürünleri",
-                  "Soya",
-                  "Çikolata / Kakao",
-                  "Bal",
-                  "Aşırı tuz hassasiyeti",
-                  "Baharatlara duyarlılık"
-                ].map((alerji) {
-                  return FilterChip(
-                    label: Text(alerji),
-                    selected: _seciliAlerjiler.contains(alerji),
-                    onSelected: (selected) {
-                      setState(() {
-                        if (selected) {
-                          _seciliAlerjiler.add(alerji);
-                        } else {
-                          _seciliAlerjiler.remove(alerji);
-                        }
-                      });
-                    },
-                  );
-                }).toList(),
+                children:
+                    [
+                      "Süt/Laktoz",
+                      "Gluten",
+                      "Yumurta",
+                      "Yer fıstığı",
+                      "Ağaç yemişleri (badem, ceviz vb.)",
+                      "Balık",
+                      "Kabuklu deniz ürünleri",
+                      "Soya",
+                      "Çikolata / Kakao",
+                      "Bal",
+                      "Aşırı tuz hassasiyeti",
+                      "Baharatlara duyarlılık",
+                    ].map((alerji) {
+                      return FilterChip(
+                        label: Text(alerji),
+                        selected: _seciliAlerjiler.contains(alerji),
+                        onSelected: (selected) {
+                          setState(() {
+                            if (selected) {
+                              _seciliAlerjiler.add(alerji);
+                            } else {
+                              _seciliAlerjiler.remove(alerji);
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
               ),
               SizedBox(height: 20),
               Padding(
@@ -385,36 +397,37 @@ class _CocukProfilOlusturmaSayfasiState extends State<CocukProfilOlusturmaSayfas
               Wrap(
                 spacing: 10,
                 runSpacing: 10,
-                children: [
-                  "Fenilketonüri (PKU)",
-                  "Çölyak Hastalığı",
-                  "Tip 1 Diyabet",
-                  "Tip 2 Diyabet",
-                  "Galaktozemi",
-                  "Fruktoz İntoleransı",
-                  "Maple Syrup Urine Disease (MSUD)",
-                  "Glikojen Depo Hastalıkları",
-                  "Obezite",
-                  "Anemi (Demir eksikliği)",
-                  "Raşitizm (D vitamini eksikliği)",
-                  "Malnütrisyon (Yetersiz beslenme)",
-                  "İyot eksikliği",
-                  "Hipervitaminosis (Aşırı vitamin alımı)"
-                ].map((hastalik) {
-                  return FilterChip(
-                    label: Text(hastalik),
-                    selected: _seciliHastaliklar.contains(hastalik),
-                    onSelected: (selected) {
-                      setState(() {
-                        if (selected) {
-                          _seciliHastaliklar.add(hastalik);
-                        } else {
-                          _seciliHastaliklar.remove(hastalik);
-                        }
-                      });
-                    },
-                  );
-                }).toList(),
+                children:
+                    [
+                      "Fenilketonüri (PKU)",
+                      "Çölyak Hastalığı",
+                      "Tip 1 Diyabet",
+                      "Tip 2 Diyabet",
+                      "Galaktozemi",
+                      "Fruktoz İntoleransı",
+                      "Maple Syrup Urine Disease (MSUD)",
+                      "Glikojen Depo Hastalıkları",
+                      "Obezite",
+                      "Anemi (Demir eksikliği)",
+                      "Raşitizm (D vitamini eksikliği)",
+                      "Malnütrisyon (Yetersiz beslenme)",
+                      "İyot eksikliği",
+                      "Hipervitaminosis (Aşırı vitamin alımı)",
+                    ].map((hastalik) {
+                      return FilterChip(
+                        label: Text(hastalik),
+                        selected: _seciliHastaliklar.contains(hastalik),
+                        onSelected: (selected) {
+                          setState(() {
+                            if (selected) {
+                              _seciliHastaliklar.add(hastalik);
+                            } else {
+                              _seciliHastaliklar.remove(hastalik);
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
               ),
               SizedBox(height: 20),
               Padding(
@@ -431,7 +444,7 @@ class _CocukProfilOlusturmaSayfasiState extends State<CocukProfilOlusturmaSayfas
           ],
         );
 
-    // >>> BURAYA DİĞER AŞAMALAR EKLENECEK <<<
+      // >>> BURAYA DİĞER AŞAMALAR EKLENECEK <<<
 
       default:
         return Text("Tamamlandı");
@@ -448,7 +461,7 @@ class _CocukProfilOlusturmaSayfasiState extends State<CocukProfilOlusturmaSayfas
         _kilo = double.tryParse(_kiloController.text.trim());
         break;
       case 4:
-      // Aktivite düzeyi zaten _aktiviteDuzeyi içinde tutuluyor
+        // Aktivite düzeyi zaten _aktiviteDuzeyi içinde tutuluyor
         break;
       case 5:
         if (_alerjiVarMi == "Evet") {
@@ -470,10 +483,7 @@ class _CocukProfilOlusturmaSayfasiState extends State<CocukProfilOlusturmaSayfas
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Çocuk Profili Oluştur"),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: Text("Çocuk Profili Oluştur"), centerTitle: true),
       body: Center(
         child: SingleChildScrollView(
           child: Column(
@@ -487,18 +497,20 @@ class _CocukProfilOlusturmaSayfasiState extends State<CocukProfilOlusturmaSayfas
                   if (_aktifAdim > 0)
                     ElevatedButton(
                       onPressed: _geriGit,
-                      child: Text(
-                        "Geri Git",
-                        style: TextStyle(fontSize: 18),
-                      ),
+                      child: Text("Geri Git", style: TextStyle(fontSize: 18)),
                     ),
                   if (_aktifAdim > 0)
-                    SizedBox(width: 20), // Geri Git ile Devam Et arasında boşluk
+                    SizedBox(
+                      width: 20,
+                    ), // Geri Git ile Devam Et arasında boşluk
                   ElevatedButton(
                     onPressed: () {
                       _asamaVerisiniKaydet();
                       _ileriGit();
-                    },
+                    }
+
+
+,
                     child: Text(
                       _aktifAdim < 7 ? "Devam Et" : "Tamamla",
                       style: TextStyle(fontSize: 18),
@@ -513,4 +525,5 @@ class _CocukProfilOlusturmaSayfasiState extends State<CocukProfilOlusturmaSayfas
       ),
     );
   }
+
 }
