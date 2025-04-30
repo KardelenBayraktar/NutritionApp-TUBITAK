@@ -340,12 +340,6 @@ class _MealPlanPageState extends State<MealPlanPage> {
 
     return Column(
       children: [
-        // Ay ve yıl gösterimi
-        Text(
-          DateFormat('MMMM yyyy', 'tr').format(selectedDate), // "Mart 2025" formatı
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        SizedBox(height: 8),
 
         // Hafta değiştirme butonları
         Row(
@@ -514,38 +508,81 @@ class _MealPlanPageState extends State<MealPlanPage> {
   // Besin değerlerini gösteren widget
   Widget _buildNutritionCard() {
     return Card(
-      margin: EdgeInsets.all(8.0),
+      margin: EdgeInsets.all(16.0),
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
       child: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Tüketilen Besin Değerleri',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Row(
+              children: [
+                Icon(Icons.local_dining, color: Color(0xFF86A788), size: 28),
+                SizedBox(width: 10),
+                Text(
+                  'Tüketilen Besin Değerleri',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2C3639),
+                  ),
+                ),
+              ],
             ),
-            SizedBox(height: 16),
+            SizedBox(height: 20),
             ...nutritionTotals.entries.map((entry) {
               double consumedValue = consumedNutrition[entry.key] ?? 0;
               double totalValue = entry.value;
               double percentage = totalValue > 0 ? (consumedValue / totalValue) * 100 : 0;
               
-              return Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(entry.key),
-                      Text("${consumedValue.toInt()} / ${totalValue.toInt()} (${percentage.toStringAsFixed(1)}%)"),
-                    ],
-                  ),
-                  LinearProgressIndicator(
-                    value: percentage / 100,
-                    backgroundColor: Colors.grey[300],
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF86A788)),
-                  ),
-                  SizedBox(height: 8),
-                ],
+              return Container(
+                margin: EdgeInsets.only(bottom: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          entry.key,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF2C3639),
+                          ),
+                        ),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Color(0xFF86A788).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            "${consumedValue.toInt()} / ${totalValue.toInt()} (${percentage.toStringAsFixed(1)}%)",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF86A788),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: LinearProgressIndicator(
+                        value: percentage / 100,
+                        backgroundColor: Colors.grey[200],
+                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF86A788)),
+                        minHeight: 10,
+                      ),
+                    ),
+                  ],
+                ),
               );
             }).toList(),
           ],
