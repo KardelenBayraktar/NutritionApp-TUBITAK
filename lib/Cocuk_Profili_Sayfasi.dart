@@ -49,7 +49,7 @@ class _CocukProfilSayfasiState extends State<CocukProfilSayfasi> {
                         margin: EdgeInsets.symmetric(horizontal: 20),
                         padding: EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
+                          color: Colors.white70.withOpacity(0.75),
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
@@ -64,7 +64,7 @@ class _CocukProfilSayfasiState extends State<CocukProfilSayfasi> {
                             "Henüz çocuk profili oluşturmadınız!",
                             style: TextStyle(
                               fontSize: 20,
-                              color: Colors.white,
+                              color: Colors.black,
                               fontWeight: FontWeight.bold,
                             ),
                             textAlign: TextAlign.center,

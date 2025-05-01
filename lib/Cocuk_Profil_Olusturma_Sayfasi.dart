@@ -93,7 +93,7 @@ class _CocukProfilOlusturmaSayfasiState
               "Çocuğunuzun ismini girin",
               style: TextStyle(
                 fontSize: 22,
-                color: Colors.white,
+                color: Colors.black,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -125,7 +125,7 @@ class _CocukProfilOlusturmaSayfasiState
               "Cinsiyet Seçin",
               style: TextStyle(
                 fontSize: 22,
-                color: Colors.white,
+                color: Colors.black,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -137,28 +137,28 @@ class _CocukProfilOlusturmaSayfasiState
                   _cinsiyet = index == 0 ? 'Erkek' : 'Kız';
                 });
               },
-              borderRadius: BorderRadius.circular(12),
-              selectedColor: Colors.white,
+              borderRadius: BorderRadius.circular(15),
+              selectedColor: Colors.black,
               fillColor: Color(0xFF86A788),
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
                   child: Text(
                     'Erkek',
                     style: TextStyle(
                       fontSize: 18,
-                      color: Colors.white,
+                      color: Colors.black,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 25),
                   child: Text(
                     'Kız',
                     style: TextStyle(
                       fontSize: 18,
-                      color: Colors.white,
+                      color: Colors.black,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -176,7 +176,7 @@ class _CocukProfilOlusturmaSayfasiState
               "Doğum Tarihini Seçin",
               style: TextStyle(
                 fontSize: 22,
-                color: Colors.white,
+                color: Colors.black,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -225,7 +225,7 @@ class _CocukProfilOlusturmaSayfasiState
               "Boy ve Kilo Bilgisi",
               style: TextStyle(
                 fontSize: 22,
-                color: Colors.white,
+                color: Colors.black,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -277,8 +277,8 @@ class _CocukProfilOlusturmaSayfasiState
               child: Container(
                 padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.white.withOpacity(0.75),
+                  borderRadius: BorderRadius.circular(15),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black26,
@@ -291,7 +291,7 @@ class _CocukProfilOlusturmaSayfasiState
                   "Çocuğunuzun gün içindeki fiziksel aktivite düzeyini en iyi anlatan seçeneği seçin:",
                   style: TextStyle(
                     fontSize: 20,
-                    color: Colors.white,
+                    color: Colors.black,
                     fontWeight: FontWeight.w600,
                   ),
                   textAlign: TextAlign.center,
@@ -310,7 +310,7 @@ class _CocukProfilOlusturmaSayfasiState
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
+                    color: Colors.white.withOpacity(0.75),
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
@@ -342,12 +342,12 @@ class _CocukProfilOlusturmaSayfasiState
                           secenekler[index],
                           style: TextStyle(
                             fontSize: 18,
-                            color: Colors.white,
+                            color: Colors.black,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         trailing: IconButton(
-                          icon: Icon(Icons.help_outline, color: Colors.white),
+                          icon: Icon(Icons.help_outline, color: Colors.black87),
                           onPressed: () {
                             setState(() {
                               showInfo[index] = !(showInfo[index] ?? false);
@@ -392,7 +392,7 @@ class _CocukProfilOlusturmaSayfasiState
                 "Çocuğunuzun bilinen bir gıda alerjisi veya intoleransı var mı?",
                 style: TextStyle(
                   fontSize: 20,
-                  color: Colors.white,
+                  color: Colors.black,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -503,7 +503,7 @@ class _CocukProfilOlusturmaSayfasiState
                 "Çocuğunuzda tanı konmuş bir beslenme veya metabolizma hastalığı var mı?",
                 style: TextStyle(
                   fontSize: 20,
-                  color: Colors.white,
+                  color: Colors.black,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -612,7 +612,7 @@ class _CocukProfilOlusturmaSayfasiState
           "Tamamlandı",
           style: TextStyle(
             fontSize: 24,
-            color: Colors.white,
+            color: Colors.black,
             fontWeight: FontWeight.w600,
           ),
         );
