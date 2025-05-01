@@ -29,8 +29,7 @@ class _CocukProfilOlusturmaSayfasiState
   final TextEditingController _boyController = TextEditingController();
   final TextEditingController _kiloController = TextEditingController();
   final TextEditingController _digerAlerjiController = TextEditingController();
-  final TextEditingController _digerHastalikController =
-      TextEditingController();
+  final TextEditingController _digerHastalikController = TextEditingController();
 
   void _ileriGit() {
     if (_aktifAdim < 7) {
@@ -507,10 +506,7 @@ class _CocukProfilOlusturmaSayfasiState
                     onPressed: () {
                       _asamaVerisiniKaydet();
                       _ileriGit();
-                    }
-
-
-,
+                    },
                     child: Text(
                       _aktifAdim < 7 ? "Devam Et" : "Tamamla",
                       style: TextStyle(fontSize: 18),
@@ -525,5 +521,4 @@ class _CocukProfilOlusturmaSayfasiState
       ),
     );
   }
-
 }
