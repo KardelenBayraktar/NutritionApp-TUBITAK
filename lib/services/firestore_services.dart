@@ -36,9 +36,6 @@ class FirestoreService {
     }
   }
 
-
-
-
   // Kullanıcı bilgilerini almak
   Future<DocumentSnapshot> getUser(String userId) async {
     try {
@@ -140,6 +137,23 @@ class FirestoreService {
       print("Profil başarıyla oluşturuldu.");
     } catch (e) {
       print("Profil oluşturulurken hata oluştu: $e");
+    }
+  }
+
+  // Kullanıcı bilgilerini Firestore'a kaydeden fonksiyon
+  Future<void> createUserData({
+    required String uid,
+    required String email,
+    required String username,
+  }) async {
+    try {
+      await _db.collection('users').doc(uid).set({
+        'email': email,
+        'username': username,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      rethrow;
     }
   }
 }

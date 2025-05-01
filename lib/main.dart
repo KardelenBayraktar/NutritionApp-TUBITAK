@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/date_symbol_data_local.dart'; // Yerel tarih formatlama için
-
 import 'Ana_Sayfa.dart';
 import 'Beslenme_Plani_Sayfasi.dart';
 import 'Favoriler_sayfasi.dart';
@@ -51,10 +50,10 @@ class MyApp extends StatelessWidget {
 // 📌 Firestore'dan aktif beslenme planı olup olmadığını kontrol eden fonksiyon
 Future<bool> checkActiveMealPlan() async {
   var snapshot = await FirebaseFirestore.instance
-      .collection('beslenme_planlari')
-      .where('aktif', isEqualTo: true)
-      .limit(1)
-      .get();
+          .collection('beslenme_planlari')
+          .where('aktif', isEqualTo: true)
+          .limit(1)
+          .get();
 
   return snapshot.docs.isNotEmpty; // Eğer aktif plan varsa true döner
 }
