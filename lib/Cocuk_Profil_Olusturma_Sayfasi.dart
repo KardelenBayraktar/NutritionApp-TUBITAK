@@ -1,7 +1,7 @@
 import 'package:beslenme_takip_sistemi/Ana_Sayfa.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'firestore_service.dart';
+import 'services/firestore_services.dart';
 
 class CocukProfilOlusturmaSayfasi extends StatefulWidget {
   @override
