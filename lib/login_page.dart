@@ -48,8 +48,8 @@ class _LoginPageState extends State<LoginPage> {
                   child: Text(
                     "Hesabınız yok mu? Kayıt olun",
                     style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
+                      color: Colors.black,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                       decoration: TextDecoration.underline,
                     ),
