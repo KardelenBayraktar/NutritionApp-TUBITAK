@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+
 class SettingsPage extends StatefulWidget {
   final Function(bool) onThemeChanged;
 
@@ -23,7 +24,8 @@ class _SettingsPageState extends State<SettingsPage> {
   void _loadPreferences() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      isDarkMode = prefs.getBool('darkMode') ?? false; // 🔥 Kaydedilmiş değeri yükle
+      isDarkMode =
+          prefs.getBool('darkMode') ?? false; // 🔥 Kaydedilmiş değeri yükle
     });
   }
 
@@ -35,9 +37,7 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Ayarlar'),
-      ),
+      appBar: AppBar(title: Text('Ayarlar')),
       body: ListView(
         children: [
           Column(
