@@ -18,7 +18,7 @@ class _HomePageState extends State<HomePage> {
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
-              decoration: BoxDecoration(color: Colors.green), // Sidebar üst kısmı
+              decoration: BoxDecoration(color: Color(0xFF86A788)), // Sidebar üst kısmı
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -97,7 +97,7 @@ class _HomePageState extends State<HomePage> {
   /// SideBar Menü Elemanı Oluşturma Fonksiyonu
   Widget _buildDrawerItem(IconData icon, String title, String route) {
     return ListTile(
-      leading: Icon(icon, color: Colors.green),
+      leading: Icon(icon, color: Color(0xFF86A788)),
       title: Text(title, style: TextStyle(fontSize: 16)),
       onTap: () {
         Navigator.pop(context); // Drawer'ı kapat

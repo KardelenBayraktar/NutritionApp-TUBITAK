@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'child_info_page.dart';
 
 class RegisterPage extends StatelessWidget {
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -12,7 +12,7 @@ class RegisterPage extends StatelessWidget {
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/image.jpg'),
+            image: AssetImage('assets/image.png'),
             fit: BoxFit.cover,
           ),
         ),
@@ -49,6 +49,8 @@ class RegisterPage extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      _buildTextField("İsim", _nameController),
+                      SizedBox(height: 15),
                       _buildTextField("E-Posta Adresi", _emailController),
                       SizedBox(height: 15),
                       _buildTextField("Kullanıcı Adı", _usernameController),
@@ -56,13 +58,13 @@ class RegisterPage extends StatelessWidget {
                       _buildTextField("Şifre", _passwordController, isPassword: true),
                       SizedBox(height: 20),
                       _buildButton(context, "Kayıt Ol", () {
-                        if (_emailController.text.isEmpty || _usernameController.text.isEmpty || _passwordController.text.isEmpty) {
+                        if (_nameController.text.isEmpty ||
+                            _emailController.text.isEmpty ||
+                            _usernameController.text.isEmpty ||
+                            _passwordController.text.isEmpty) {
                           _showErrorDialog(context, "Eksik bilgi girdiniz.");
                         } else {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => ChildInfoPage()),
-                          );
+                          _showSuccessDialog(context);
                         }
                       }),
                     ],
@@ -77,6 +79,69 @@ class RegisterPage extends StatelessWidget {
   }
 
   Widget _buildTextField(String hint, TextEditingController controller, {bool isPassword = false}) {
+    return TextField(
+      controller: controller,
+      obscureText: isPassword,
+      decoration: InputDecoration(
+        hintText: hint,
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.8),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildButton(BuildContext context, String text, VoidCallback onPressed) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Color(0xFF86A788),
+        padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(fontSize: 16, color: Colors.white),
+      ),
+    );
+  }
+
+  void _showErrorDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Hata"),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Tamam"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSuccessDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Başarılı"),
+        content: Text("Kayıt başarılı!"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Tamam"),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+Widget _buildTextField(String hint, TextEditingController controller, {bool isPassword = false}) {
     return TextField(
       controller: controller,
       obscureText: isPassword,
@@ -124,4 +189,34 @@ class RegisterPage extends StatelessWidget {
       },
     );
   }
-}
+
+  void _showSuccessDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        title: Icon(
+          Icons.check_circle_outline,
+          color: Color(0xFF86A788),
+          size: 50,
+        ),
+        content: Text(
+          "Kayıt başarılı!",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF86A788),
+            fontSize: 18,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Dialogu kapat
+            },
+            child: Text("Tamam"),
+          ),
+        ],
+      ),
+    );
+  }
+
