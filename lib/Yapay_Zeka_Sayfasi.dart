@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:permission_handler/permission_handler.dart';
 
 class AIPage extends StatefulWidget {
   @override
@@ -7,23 +12,138 @@ class AIPage extends StatefulWidget {
 
 class _AIPageState extends State<AIPage> {
   List<Map<String, String>> messages = [
-    {"sender": "bot", "text": "Merhabalar, ben Asistan. Sizlere nasıl yardımcı olabilirim?"}
+    {
+      "sender": "bot",
+      "text": "Merhabalar, ben Asistan 🤖 Size nasıl yardımcı olabilirim?"
+    }
   ];
   TextEditingController _controller = TextEditingController();
 
-  void _sendMessage() {
-    if (_controller.text.trim().isNotEmpty) {
+  final String azureApiKey = "64WPauhkMzxYP6Yf3gSzUzbhCjby51YgjQpi0CBOl3ByzPkhICG5JQQJ99BDACHYHv6XJ3w3AAAAACOGq9QM";
+  final String azureEndpoint = "https://salih-ma2r5l7j-eastus2.openai.azure.com/openai/deployments/gpt-4.1/chat/completions?api-version=2025-01-01-preview";
+
+  File? _selectedImage;
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickImage() async {
+    // Kamera izni kontrolü ve isteme
+    var status = await Permission.camera.status;
+    if (!status.isGranted) {
+      status = await Permission.camera.request();
+      if (!status.isGranted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Kamera izni verilmedi.')),
+        );
+        return;
+      }
+    }
+
+    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.camera);
+    if (pickedFile != null) {
+      _selectedImage = File(pickedFile.path);
+
       setState(() {
-        messages.add({"sender": "user", "text": _controller.text});
+        messages.add({
+          "sender": "user",
+          "text": "📷 Bir fotoğraf gönderdiniz. Lütfen açıklamasını yeni bir mesaj olarak gönderiniz..."
+        });
+      });
+
+      // Prompt bekleme için burada bir TextField açılıyor
+      _controller.text = ""; // Kullanıcı prompt girecek
+    }
+  }
+
+  Future<String> _convertImageToBase64(File imageFile) async {
+    List<int> imageBytes = await imageFile.readAsBytes();
+    return base64Encode(imageBytes);
+  }
+
+  void _sendMessage() async {
+    if (_controller.text.trim().isNotEmpty) {
+      String userMessage = _controller.text.trim();
+
+      setState(() {
+        messages.add({"sender": "user", "text": userMessage});
         _controller.clear();
       });
+
+      String aiResponse = await _getAIResponse(userMessage);
+
+      setState(() {
+        messages.add({"sender": "bot", "text": aiResponse});
+      });
+    }
+  }
+
+  Future<String> _getAIResponse(String userInput) async {
+    try {
+      Map<String, dynamic> body;
+
+      if (_selectedImage != null) {
+        String base64Image = await _convertImageToBase64(_selectedImage!);
+        body = {
+          "messages": [
+            {"role": "system", "content": "Sen bir yardımcı görsel asistanısın."},
+            {
+              "role": "user",
+              "content": [
+                {"type": "text", "text": userInput},
+                {
+                  "type": "image_url",
+                  "image_url": {
+                    "url": "data:image/jpeg;base64,$base64Image",
+                  }
+                }
+              ]
+            },
+          ],
+          "max_tokens": 1000,
+        };
+
+        _selectedImage = null; // işlemden sonra sıfırla
+      } else {
+        body = {
+          "messages": [
+            {"role": "system", "content": "Sen bir yardımcı asistansın."},
+            {"role": "user", "content": userInput},
+          ],
+          "temperature": 0.7,
+          "max_tokens": 1000,
+        };
+      }
+
+      var response = await http.post(
+        Uri.parse(azureEndpoint),
+        headers: {
+          'Content-Type': 'application/json',
+          'api-key': azureApiKey,
+        },
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode == 200) {
+        var data = jsonDecode(utf8.decode(response.bodyBytes));
+        return data['choices'][0]['message']['content'];
+      } else {
+        print("Hata kodu: ${response.statusCode}");
+        print("Hata mesajı: ${response.body}");
+        return "Üzgünüm, şu anda yanıt veremiyorum 😔";
+      }
+    } catch (e) {
+      print("İstek hatası: $e");
+      return "Bir hata oluştu, lütfen tekrar deneyin.";
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("AI Asistan")),
+      backgroundColor: Color(0xFFEFF3F6),
+      appBar: AppBar(
+        title: Text("💬 AI Asistan"),
+        backgroundColor: Colors.deepPurple,
+      ),
       body: Column(
         children: [
           Expanded(
@@ -36,12 +156,31 @@ class _AIPageState extends State<AIPage> {
                   alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
                   child: Container(
                     margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                    padding: EdgeInsets.all(10),
+                    padding: EdgeInsets.all(12),
+                    constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
                     decoration: BoxDecoration(
-                      color: isUser ? Colors.green[200] : Colors.grey[300],
-                      borderRadius: BorderRadius.circular(15),
+                      color: isUser ? Colors.deepPurpleAccent : Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(16),
+                        topRight: Radius.circular(16),
+                        bottomLeft: isUser ? Radius.circular(16) : Radius.circular(0),
+                        bottomRight: isUser ? Radius.circular(0) : Radius.circular(16),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 4,
+                          offset: Offset(2, 2),
+                        ),
+                      ],
                     ),
-                    child: Text(messages[index]["text"]!, style: TextStyle(fontSize: 16)),
+                    child: Text(
+                      messages[index]["text"]!,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: isUser ? Colors.white : Colors.black87,
+                      ),
+                    ),
                   ),
                 );
               },
@@ -55,10 +194,13 @@ class _AIPageState extends State<AIPage> {
 
   Widget _buildMessageInput() {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(color: Colors.white, boxShadow: [
-        BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, -2))
-      ]),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, -2))
+        ],
+      ),
       child: Row(
         children: [
           Expanded(
@@ -72,12 +214,10 @@ class _AIPageState extends State<AIPage> {
           ),
           IconButton(
             icon: Icon(Icons.camera_alt, color: Colors.grey),
-            onPressed: () {
-              // Şu an boş, ancak ileride kamera açma işlevi eklenebilir.
-            },
+            onPressed: _pickImage,
           ),
           IconButton(
-            icon: Icon(Icons.send, color: Colors.green),
+            icon: Icon(Icons.send, color: Colors.deepPurple),
             onPressed: _sendMessage,
           ),
         ],
@@ -85,3 +225,5 @@ class _AIPageState extends State<AIPage> {
     );
   }
 }
+
+

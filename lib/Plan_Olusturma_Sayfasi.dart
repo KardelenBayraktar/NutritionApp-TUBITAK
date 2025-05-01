@@ -118,8 +118,8 @@ class _MealPlanCreationPageState extends State<MealPlanCreationPage> {
 
     // Gün ve tarif eşleşmesi
     Map<DateTime, List<String>> dailyRecipes = {
-      DateTime(2025, 3, 11): ['Omlet'],
-      DateTime(2025, 3, 12): ['Karnıbahar'],
+      DateTime(2025, 4, 20): ['Omlet'],
+      DateTime(2025, 4, 22): ['Karnıbahar'],
     };
 
     // Firestore'a ekleme işlemi
