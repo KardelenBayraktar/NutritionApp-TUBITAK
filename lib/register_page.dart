@@ -48,6 +48,8 @@ class RegisterPage extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      _buildTextField("İsim", _emailController),
+                      SizedBox(height: 15),
                       _buildTextField("E-Posta Adresi", _emailController),
                       SizedBox(height: 15),
                       _buildTextField("Kullanıcı Adı", _usernameController),
