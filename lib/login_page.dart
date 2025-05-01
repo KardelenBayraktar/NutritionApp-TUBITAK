@@ -12,6 +12,8 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  bool _isLoading = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,7 +34,9 @@ class _LoginPageState extends State<LoginPage> {
                 SizedBox(height: 15),
                 _buildTextField("Şifre", _passwordController, isPassword: true),
                 SizedBox(height: 20),
-                _buildButton(context, "Giriş Yap", _signInUser),
+                _isLoading
+                    ? CircularProgressIndicator(color: Colors.white)
+                    : _buildButton(context, "Giriş Yap", _signInUser),
                 SizedBox(height: 15),
                 GestureDetector(
                   onTap: () {
@@ -108,6 +112,7 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
 
+      // Firestore'dan kullanıcıyı bulma
       QuerySnapshot query = await FirebaseFirestore.instance
           .collection('users')
           .where('username', isEqualTo: username)
@@ -118,9 +123,12 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
 
-      String firestorePassword = query.docs.first.get('password');
+      // Kullanıcı verisini al
+      var userData = query.docs.first.data() as Map<String, dynamic>;
+      String firestorePassword = userData['password'];
 
-      if (password != firestorePassword) {
+      // Şifre doğrulama
+      if (firestorePassword != password) {
         _showErrorDialog("Yanlış şifre girdiniz.");
         return;
       }
@@ -137,6 +145,7 @@ class _LoginPageState extends State<LoginPage> {
       _showErrorDialog("Bir hata oluştu: ${e.toString()}");
     }
   }
+
 
   void _showErrorDialog(String message) {
     showDialog(
