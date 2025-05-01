@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'child_info_page.dart';
 
 class RegisterPage extends StatelessWidget {
   final TextEditingController _emailController = TextEditingController();
@@ -56,13 +55,12 @@ class RegisterPage extends StatelessWidget {
                       _buildTextField("Şifre", _passwordController, isPassword: true),
                       SizedBox(height: 20),
                       _buildButton(context, "Kayıt Ol", () {
-                        if (_emailController.text.isEmpty || _usernameController.text.isEmpty || _passwordController.text.isEmpty) {
+                        if (_emailController.text.isEmpty ||
+                            _usernameController.text.isEmpty ||
+                            _passwordController.text.isEmpty) {
                           _showErrorDialog(context, "Eksik bilgi girdiniz.");
                         } else {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => ChildInfoPage()),
-                          );
+                          _showSuccessDialog(context);
                         }
                       }),
                     ],
@@ -122,6 +120,36 @@ class RegisterPage extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+
+  void _showSuccessDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        title: Icon(
+          Icons.check_circle_outline,
+          color: Color(0xFF86A788),
+          size: 50,
+        ),
+        content: Text(
+          "Kayıt başarılı!",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF86A788),
+            fontSize: 18,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Dialogu kapat
+            },
+            child: Text("Tamam"),
+          ),
+        ],
+      ),
     );
   }
 }
