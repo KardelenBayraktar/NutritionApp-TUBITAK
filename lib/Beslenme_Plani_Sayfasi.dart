@@ -27,10 +27,50 @@ class _MealPlanPageState extends State<MealPlanPage> {
     'Yağ': 0,
   };
 
+  Map<String, double> consumedNutrition = {
+    'Kalori': 0,
+    'Karbonhidrat': 0,
+    'Protein': 0,
+    'Yağ': 0,
+  };
+
+  // Yemeklerin tüketim durumunu takip eden map
+  Map<String, Map<String, bool>> consumedMeals = {};
+
+  // Her yemeğin besin değerlerini tutan map
+  Map<String, Map<String, Map<String, double>>> mealNutritionValues = {};
+
   @override
   void initState() {
     super.initState();
     _fetchLatestMealPlan(); // En son beslenme planını çek
+  }
+
+  // Öğün tüketildiğinde besin değerlerini güncelle
+  void _updateConsumedNutrition(String mealType, String meal, bool isConsumed) {
+    setState(() {
+      if (!consumedMeals.containsKey(mealType)) {
+        consumedMeals[mealType] = {};
+      }
+      consumedMeals[mealType]![meal] = isConsumed;
+
+      // Tüketilen besin değerlerini sıfırla
+      consumedNutrition.updateAll((key, value) => 0);
+
+      // Tüm tüketilen öğünlerin besin değerlerini topla
+      consumedMeals.forEach((type, meals) {
+        meals.forEach((mealName, consumed) {
+          if (consumed && mealNutritionValues.containsKey(type) && 
+              mealNutritionValues[type]!.containsKey(mealName)) {
+            var nutrition = mealNutritionValues[type]![mealName]!;
+            consumedNutrition['Kalori'] = (consumedNutrition['Kalori'] ?? 0) + (nutrition['Kalori'] ?? 0);
+            consumedNutrition['Karbonhidrat'] = (consumedNutrition['Karbonhidrat'] ?? 0) + (nutrition['Karbonhidrat'] ?? 0);
+            consumedNutrition['Protein'] = (consumedNutrition['Protein'] ?? 0) + (nutrition['Protein'] ?? 0);
+            consumedNutrition['Yağ'] = (consumedNutrition['Yağ'] ?? 0) + (nutrition['Yağ'] ?? 0);
+          }
+        });
+      });
+    });
   }
 
   // Firebase'den en son oluşturulan beslenme planını getirir
@@ -65,17 +105,16 @@ class _MealPlanPageState extends State<MealPlanPage> {
   // Belirtilen tarihteki beslenme planını Firebase'den çeker
   Future<void> _fetchMealPlan(DateTime selectedDate) async {
     try {
-      String formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate); // Tarihi uygun formata getir
-      print("formattedDate: $formattedDate"); // debug için ekleyin
+      String formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate);
+      print("formattedDate: $formattedDate");
       CollectionReference dayRef = FirebaseFirestore.instance
           .collection('beslenme_planlari')
           .doc(planId)
           .collection(formattedDate);
 
-      QuerySnapshot snapshot = await dayRef.get(); // Belirtilen günün yemek planını getir
+      QuerySnapshot snapshot = await dayRef.get();
 
       if (snapshot.docs.isNotEmpty) {
-        // Besin değerlerini sıfırla
         Map<String, double> tempNutritionTotals = {
           "Kalori": 0,
           "Karbonhidrat": 0,
@@ -84,22 +123,28 @@ class _MealPlanPageState extends State<MealPlanPage> {
         };
 
         for (var doc in snapshot.docs) {
-          print("Öğün: ${doc.id}, Veriler: ${doc.data()}");
-          String mealType = doc.id; // Kahvaltı, Öğle, Akşam gibi öğün isimleri
-
-          // Alt koleksiyon olan "tarifler"i çek
+          String mealType = doc.id;
           CollectionReference tariflerRef = dayRef.doc(mealType).collection('tarifler');
           QuerySnapshot tariflerSnapshot = await tariflerRef.get();
 
           List<String> meals = [];
+          if (!mealNutritionValues.containsKey(mealType)) {
+            mealNutritionValues[mealType] = {};
+          }
 
           for (var tarifDoc in tariflerSnapshot.docs) {
-            meals.add(tarifDoc.id); // Tarif ismi olarak belge ID'lerini al
-
-            // Tarif belgesinin "besinDeğerleri" alanını al
+            meals.add(tarifDoc.id);
             Map<String, dynamic>? besinDegerleri = tarifDoc.get("besinDeğerleri");
 
             if (besinDegerleri != null) {
+              // Besin değerlerini mealNutritionValues'a kaydet
+              mealNutritionValues[mealType]![tarifDoc.id] = {
+                'Kalori': (besinDegerleri['Kalori'] ?? 0).toDouble(),
+                'Karbonhidrat': (besinDegerleri['Karbonhidrat'] ?? 0).toDouble(),
+                'Protein': (besinDegerleri['Protein'] ?? 0).toDouble(),
+                'Yağ': (besinDegerleri['Yağ'] ?? 0).toDouble(),
+              };
+
               tempNutritionTotals["Kalori"] = (tempNutritionTotals["Kalori"] ?? 0) + (besinDegerleri["Kalori"] ?? 0);
               tempNutritionTotals["Karbonhidrat"] = (tempNutritionTotals["Karbonhidrat"] ?? 0) + (besinDegerleri["Karbonhidrat"] ?? 0);
               tempNutritionTotals["Protein"] = (tempNutritionTotals["Protein"] ?? 0) + (besinDegerleri["Protein"] ?? 0);
@@ -107,12 +152,11 @@ class _MealPlanPageState extends State<MealPlanPage> {
             }
           }
 
-          // Ekranda yemekleri güncelle
           setState(() {
             mealPlan[mealType] = meals;
           });
         }
-        // Besin değerleri güncellemesini döngüden sonra yap
+
         setState(() {
           nutritionTotals = tempNutritionTotals;
         });
@@ -121,7 +165,7 @@ class _MealPlanPageState extends State<MealPlanPage> {
         print("Bu gün için beslenme planı bulunamadı.");
         setState(() {
           mealPlan.clear();
-          nutritionTotals.updateAll((key, value) => 0); // Besin değerlerini sıfırla
+          nutritionTotals.updateAll((key, value) => 0);
         });
       }
     } catch (e) {
@@ -263,6 +307,7 @@ class _MealPlanPageState extends State<MealPlanPage> {
                   child: Text("Yeni bir beslenme planı oluştur"),
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 32.0),
+                    foregroundColor: Colors.black,
                     textStyle: TextStyle(fontSize: 16),
                   ),
                 ),
@@ -275,9 +320,10 @@ class _MealPlanPageState extends State<MealPlanPage> {
                   },
                   child: Text("Önceki Planı Yükle"),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
+                    backgroundColor: Color(0xFF86A788),
+                    foregroundColor: Colors.white,
                     padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 32.0),
-                    textStyle: TextStyle(fontSize: 16),
+                    textStyle: TextStyle(fontSize: 16 ),
                   ),
                 ),
               ),
@@ -288,13 +334,13 @@ class _MealPlanPageState extends State<MealPlanPage> {
       ),
     );
   }
-
-  // Takvim arayüzünü oluşturur
+// Takvim arayüzünü oluşturur
   Widget _buildCalendar() {
     DateTime startOfWeek = selectedDate.subtract(Duration(days: selectedDate.weekday - 1));
 
     return Column(
       children: [
+
         // Hafta değiştirme butonları
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -324,12 +370,15 @@ class _MealPlanPageState extends State<MealPlanPage> {
           ],
         ),
         SizedBox(height: 8),
+
+        // Günlerin gösterimi
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: List.generate(7, (index) {
             DateTime day = startOfWeek.add(Duration(days: index));
             String dayLabel = DateFormat('E', 'tr').format(day);
-            String dateLabel = DateFormat('dd/MM').format(day);
+            String dateLabel = DateFormat('d').format(day); // Sadece gün numarası
+
             bool isSelected = day.day == selectedDate.day;
 
             return Column(
@@ -344,10 +393,13 @@ class _MealPlanPageState extends State<MealPlanPage> {
                   },
                   child: CircleAvatar(
                     radius: 22,
-                    backgroundColor: isSelected ? Colors.green : Colors.grey[300],
+                    backgroundColor: isSelected ? Color(0xFF86A788) : Colors.grey[300],
                     child: Text(
                       dateLabel,
-                      style: TextStyle(color: isSelected ? Colors.white : Colors.black, fontSize: 14),
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : Colors.black,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
                 ),
@@ -359,11 +411,12 @@ class _MealPlanPageState extends State<MealPlanPage> {
     );
   }
 
+
   // Günlük öğünleri listeleyen widget
   Widget _buildMealPlan() {
     if (mealPlan.isEmpty) {
       return SizedBox(
-        height: 200, // Boşken belli bir yükseklik kaplaması için
+        height: 200,
         child: Center(
           child: Text(
             'Bu gün için bir plan bulunmamaktadır.',
@@ -375,8 +428,8 @@ class _MealPlanPageState extends State<MealPlanPage> {
     }
 
     return ListView(
-      shrinkWrap: true, // ListView'in içeriğe göre boyut almasını sağlar
-      physics: NeverScrollableScrollPhysics(), // SingleChildScrollView içinde kaydırmayı devre dışı bırakır
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
       padding: EdgeInsets.all(8.0),
       children: mealPlan.entries.map((entry) {
         return Card(
@@ -385,7 +438,7 @@ class _MealPlanPageState extends State<MealPlanPage> {
             children: [
               ListTile(
                 title: Text(
-                  entry.key, // Kahvaltı, Öğle, Akşam gibi öğün başlığı
+                  entry.key,
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                 ),
               ),
@@ -403,24 +456,35 @@ class _MealPlanPageState extends State<MealPlanPage> {
               )
                   : Column(
                 children: entry.value.map((meal) {
+                  bool isConsumed = consumedMeals[entry.key]?[meal] ?? false;
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => RecipeDetailPage(tarifAdi: meal),
+                        Row(
+                          children: [
+                            Checkbox(
+                              value: isConsumed,
+                              onChanged: (bool? value) {
+                                _updateConsumedNutrition(entry.key, meal, value ?? false);
+                              },
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => RecipeDetailPage(tarifAdi: meal),
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                meal,
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Color(0xFF86A788)),
                               ),
-                            );
-                          },
-                          child: Text(
-                            meal,
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.blue),
-                          ),
+                            ),
+                          ],
                         ),
                         ElevatedButton(
                           onPressed: () {
@@ -444,24 +508,90 @@ class _MealPlanPageState extends State<MealPlanPage> {
   // Besin değerlerini gösteren widget
   Widget _buildNutritionCard() {
     return Card(
-      margin: EdgeInsets.all(8.0),
-      child: Column(
-        children: nutritionTotals.entries.map((entry) => _buildNutritionRow(entry.key, entry.value, 100)).toList(),
+      margin: EdgeInsets.all(16.0),
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.local_dining, color: Color(0xFF86A788), size: 28),
+                SizedBox(width: 10),
+                Text(
+                  'Tüketilen Besin Değerleri',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2C3639),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 20),
+            ...nutritionTotals.entries.map((entry) {
+              double consumedValue = consumedNutrition[entry.key] ?? 0;
+              double totalValue = entry.value;
+              double percentage = totalValue > 0 ? (consumedValue / totalValue) * 100 : 0;
+              
+              return Container(
+                margin: EdgeInsets.only(bottom: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          entry.key,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF2C3639),
+                          ),
+                        ),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Color(0xFF86A788).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            "${consumedValue.toInt()} / ${totalValue.toInt()} (${percentage.toStringAsFixed(1)}%)",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF86A788),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: LinearProgressIndicator(
+                        value: percentage / 100,
+                        backgroundColor: Colors.grey[200],
+                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF86A788)),
+                        minHeight: 10,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ],
+        ),
       ),
     );
   }
-
-  // Besin değeri için gösterge çubuğu oluşturur
-  Widget _buildNutritionRow(String label, double value, double max) {
-    double progress = (max == 0) ? 0 : value / max;
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [Text(label), Text("${value.toInt()} / ${max.toInt()}")],
-        ),
-        LinearProgressIndicator(value: progress, backgroundColor: Colors.grey[300], valueColor: AlwaysStoppedAnimation<Color>(Colors.green)),
-      ],
-    );
-  }
 }
+
+
+
+

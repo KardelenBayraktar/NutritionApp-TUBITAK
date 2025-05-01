@@ -1,20 +1,10 @@
 import 'package:flutter/material.dart';
-import 'child_info_page.dart';
-import 'services/auth_services.dart'; // auth_service.dart'ı doğru yoluyla ekleyin
 
-class RegisterPage extends StatefulWidget {
-  @override
-  _RegisterPageState createState() => _RegisterPageState();
-}
-
-class _RegisterPageState extends State<RegisterPage> {
-  final AuthService _authService = AuthService();
-
+class RegisterPage extends StatelessWidget {
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
-  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +12,7 @@ class _RegisterPageState extends State<RegisterPage> {
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/image.jpg'),
+            image: AssetImage('assets/image.png'),
             fit: BoxFit.cover,
           ),
         ),
@@ -33,7 +23,9 @@ class _RegisterPageState extends State<RegisterPage> {
               child: Align(
                 alignment: Alignment.topLeft,
                 child: GestureDetector(
-                  onTap: () => Navigator.pop(context),
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
                   child: Container(
                     width: 40,
                     height: 40,
@@ -41,7 +33,11 @@ class _RegisterPageState extends State<RegisterPage> {
                       color: Color(0xFF86A788),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(Icons.arrow_back, color: Colors.white, size: 24),
+                    child: Icon(
+                      Icons.arrow_back,
+                      color: Colors.white,
+                      size: 24,
+                    ),
                   ),
                 ),
               ),
@@ -53,14 +49,24 @@ class _RegisterPageState extends State<RegisterPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      _buildTextField("İsim", _nameController),
+                      SizedBox(height: 15),
                       _buildTextField("E-Posta Adresi", _emailController),
                       SizedBox(height: 15),
                       _buildTextField("Kullanıcı Adı", _usernameController),
                       SizedBox(height: 15),
                       _buildTextField("Şifre", _passwordController, isPassword: true),
                       SizedBox(height: 20),
-                      _buildButton(context, "Kayıt Ol", _registerUser),
-                      if (_isLoading) CircularProgressIndicator(),
+                      _buildButton(context, "Kayıt Ol", () {
+                        if (_nameController.text.isEmpty ||
+                            _emailController.text.isEmpty ||
+                            _usernameController.text.isEmpty ||
+                            _passwordController.text.isEmpty) {
+                          _showErrorDialog(context, "Eksik bilgi girdiniz.");
+                        } else {
+                          _showSuccessDialog(context);
+                        }
+                      }),
                     ],
                   ),
                 ),
@@ -73,6 +79,69 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Widget _buildTextField(String hint, TextEditingController controller, {bool isPassword = false}) {
+    return TextField(
+      controller: controller,
+      obscureText: isPassword,
+      decoration: InputDecoration(
+        hintText: hint,
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.8),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildButton(BuildContext context, String text, VoidCallback onPressed) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Color(0xFF86A788),
+        padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(fontSize: 16, color: Colors.white),
+      ),
+    );
+  }
+
+  void _showErrorDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Hata"),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Tamam"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSuccessDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Başarılı"),
+        content: Text("Kayıt başarılı!"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Tamam"),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+Widget _buildTextField(String hint, TextEditingController controller, {bool isPassword = false}) {
     return TextField(
       controller: controller,
       obscureText: isPassword,
@@ -103,15 +172,47 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  void _showErrorDialog(String message) {
+  void _showErrorDialog(BuildContext context, String message) {
     showDialog(
       context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Hata"),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text("Tamam"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showSuccessDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
       builder: (_) => AlertDialog(
-        title: Text("Hata"),
-        content: Text(message),
+        title: Icon(
+          Icons.check_circle_outline,
+          color: Color(0xFF86A788),
+          size: 50,
+        ),
+        content: Text(
+          "Kayıt başarılı!",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF86A788),
+            fontSize: 18,
+          ),
+        ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              Navigator.of(context).pop(); // Dialogu kapat
+            },
             child: Text("Tamam"),
           ),
         ],
@@ -119,33 +220,3 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  Future<void> _registerUser() async {
-    String email = _emailController.text.trim();
-    String username = _usernameController.text.trim();
-    String password = _passwordController.text.trim();
-
-    if (email.isEmpty || username.isEmpty || password.isEmpty) {
-      _showErrorDialog("Eksik bilgi girdiniz.");
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    try {
-      // Kullanıcı adının daha önce alınıp alınmadığını kontrol et
-      Map<String, dynamic>? existingUser = await _authService.getUserByUsername(username);
-      if (existingUser != null) {
-        _showErrorDialog("Bu kullanıcı adı zaten alınmış.");
-        return;
-      }
-
-      // Kullanıcıyı kaydet
-      await _authService.signUp(email: email, password: password, username: username);
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => ChildInfoPage()));
-    } catch (e) {
-      _showErrorDialog(e.toString());
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
-}
