@@ -14,7 +14,7 @@ class _AIPageState extends State<AIPage> {
   List<Map<String, String>> messages = [
     {
       "sender": "bot",
-      "text": "Merhabalar, ben Asistan 🤖 Size nasıl yardımcı olabilirim?"
+      "text": "Merhabalar, ben Beslenme Asistanın 🤖 Size nasıl yardımcı olabilirim?"
     }
   ];
   TextEditingController _controller = TextEditingController();
@@ -26,7 +26,6 @@ class _AIPageState extends State<AIPage> {
   final ImagePicker _picker = ImagePicker();
 
   Future<void> _pickImage() async {
-    // Kamera izni kontrolü ve isteme
     var status = await Permission.camera.status;
     if (!status.isGranted) {
       status = await Permission.camera.request();
@@ -41,16 +40,13 @@ class _AIPageState extends State<AIPage> {
     final XFile? pickedFile = await _picker.pickImage(source: ImageSource.camera);
     if (pickedFile != null) {
       _selectedImage = File(pickedFile.path);
-
       setState(() {
         messages.add({
           "sender": "user",
           "text": "📷 Bir fotoğraf gönderdiniz. Lütfen açıklamasını yeni bir mesaj olarak gönderiniz..."
         });
       });
-
-      // Prompt bekleme için burada bir TextField açılıyor
-      _controller.text = ""; // Kullanıcı prompt girecek
+      _controller.text = "";
     }
   }
 
@@ -68,7 +64,7 @@ class _AIPageState extends State<AIPage> {
         _controller.clear();
       });
 
-      String aiResponse = await _getAIResponse(userMessage);
+      String aiResponse = await _getAIResponse();
 
       setState(() {
         messages.add({"sender": "bot", "text": aiResponse});
@@ -76,41 +72,34 @@ class _AIPageState extends State<AIPage> {
     }
   }
 
-  Future<String> _getAIResponse(String userInput) async {
+  Future<String> _getAIResponse() async {
     try {
-      Map<String, dynamic> body;
+      List<Map<String, dynamic>> chatMessages = [
+        {"role": "system", "content": "Sen bir yardımcı asistansın."}
+      ];
 
-      if (_selectedImage != null) {
-        String base64Image = await _convertImageToBase64(_selectedImage!);
-        body = {
-          "messages": [
-            {"role": "system", "content": "Sen bir yardımcı görsel asistanısın."},
-            {
-              "role": "user",
-              "content": [
-                {"type": "text", "text": userInput},
-                {
-                  "type": "image_url",
-                  "image_url": {
-                    "url": "data:image/jpeg;base64,$base64Image",
-                  }
+      for (var msg in messages) {
+        if (msg["sender"] == "user" && _selectedImage != null) {
+          String base64Image = await _convertImageToBase64(_selectedImage!);
+          chatMessages.add({
+            "role": "user",
+            "content": [
+              {"type": "text", "text": msg["text"]!},
+              {
+                "type": "image_url",
+                "image_url": {
+                  "url": "data:image/jpeg;base64,$base64Image",
                 }
-              ]
-            },
-          ],
-          "max_tokens": 1000,
-        };
-
-        _selectedImage = null; // işlemden sonra sıfırla
-      } else {
-        body = {
-          "messages": [
-            {"role": "system", "content": "Sen bir yardımcı asistansın."},
-            {"role": "user", "content": userInput},
-          ],
-          "temperature": 0.7,
-          "max_tokens": 1000,
-        };
+              }
+            ]
+          });
+          _selectedImage = null; // sadece ilk resim için
+        } else {
+          chatMessages.add({
+            "role": msg["sender"] == "user" ? "user" : "assistant",
+            "content": msg["text"]!,
+          });
+        }
       }
 
       var response = await http.post(
@@ -119,7 +108,11 @@ class _AIPageState extends State<AIPage> {
           'Content-Type': 'application/json',
           'api-key': azureApiKey,
         },
-        body: jsonEncode(body),
+        body: jsonEncode({
+          "messages": chatMessages,
+          "temperature": 0.7,
+          "max_tokens": 1000,
+        }),
       );
 
       if (response.statusCode == 200) {
@@ -225,5 +218,6 @@ class _AIPageState extends State<AIPage> {
     );
   }
 }
+
 
 
